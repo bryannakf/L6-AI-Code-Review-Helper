@@ -1,3 +1,4 @@
+import time
 from services.ai_service import analyse_code
 
 # Test Python
@@ -10,14 +11,21 @@ def divide(a, b):
     return result
 """
 
+python_start = time.perf_counter()
+
 python_result = analyse_code(
     python_code,
     "python"
 )
 
+python_end = time.perf_counter()
+
+python_time = python_end - python_start
+
 print("PYTHON RESULT:")
 print(python_result)
 
+print(f"Python AI analysis time: {python_time:.2f} seconds")
 
 # Test JavaScript
 
@@ -29,10 +37,18 @@ function login(username, password) {
 }
 """
 
+javascript_start = time.perf_counter()
+
 javascript_result = analyse_code(
     javascript_code,
     "javascript"
 )
 
+javascript_end = time.perf_counter()
+
+javascript_time = javascript_end - javascript_start
+
 print("\nJAVASCRIPT RESULT:")
 print(javascript_result)
+
+print(f"JavaScript AI analysis time: {javascript_time:.2f} seconds")

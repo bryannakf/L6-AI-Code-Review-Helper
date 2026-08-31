@@ -1,4 +1,5 @@
 import time
+
 from flask import Blueprint, request, jsonify
 
 from utils.validation import validate_code
@@ -13,6 +14,9 @@ review_bp = Blueprint("review", __name__)
 
 @review_bp.route("/review", methods=["POST"])
 def review_code():
+
+    # Start overall timer
+    start_time = time.perf_counter()
 
     # 1. Get request
     data = request.get_json()
@@ -32,12 +36,10 @@ def review_code():
         return jsonify({
             "error": error
         }), 400
-    #3 start timer
-    import time
-
-    start_time = time.perf_counter()
 
     # 3. Run static analysis
+    static_start = time.perf_counter()
+
     if language.lower() == "python":
 
         static_results = analyse_python(code)
@@ -52,31 +54,86 @@ def review_code():
             "error": f"Unsupported language: {language}"
         }), 400
 
-    # Extract static-analysis issues for scoring
-    static_issues = static_results.get("issues", [])
+    static_end = time.perf_counter()
+
+    static_analysis_time = round(
+        static_end - static_start,
+        2
+    )
 
     # 4. Run AI analysis
+    ai_start = time.perf_counter()
+
     ai_results = analyse_code(code, language)
 
-    # Extract AI issues for scoring
-    ai_issues = ai_results.get("issues", [])
+    ai_end = time.perf_counter()
+
+    ai_analysis_time = round(
+        ai_end - ai_start,
+        2
+    )
+
+    # Check whether AI analysis succeeded
+    ai_available = "error" not in ai_results
 
     # 5. Calculate score
-    score = calculate_score(
-        static_issues,
-        ai_issues
+    score_start = time.perf_counter()
+
+    if ai_available:
+
+        score = calculate_score(
+            static_results.get("issues", []),
+            ai_results.get("issues", [])
+        )
+
+    else:
+
+        # Continue using static-analysis results
+        # if the AI service is unavailable.
+        score = calculate_score(
+            static_results.get("issues", []),
+            []
+        )
+
+    score_end = time.perf_counter()
+
+    score_calculation_time = round(
+        score_end - score_start,
+        2
     )
-    # stop timer
+
+    # Calculate total analysis time
     end_time = time.perf_counter()
+
     analysis_time = round(
         end_time - start_time,
         2
     )
+
     # 6. Return results
     return jsonify({
         "language": language,
+
         "static_analysis": static_results,
+
         "ai_analysis": ai_results,
+
+        "ai_feedback": {
+            "available": ai_available,
+            "error": (
+                "AI analysis unavailable"
+                if not ai_available
+                else None
+            )
+        },
+
         "score": score,
-        "analysis_time": analysis_time
+
+        "analysis_time": analysis_time,
+
+        "performance": {
+            "static_analysis_time": static_analysis_time,
+            "ai_analysis_time": ai_analysis_time,
+            "score_calculation_time": score_calculation_time
+        }
     })
