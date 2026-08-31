@@ -1,122 +1,328 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import * as api from "./services/api";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    const [code, setCode] = useState("");
+    const [language, setLanguage] = useState("python");
+    const [consent, setConsent] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState(null);
+    const [error, setError] = useState("");
 
-      <div className="ticks"></div>
+    const handleAnalyse = async () => {
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        setLoading(true);
+        setError("");
+        setResults(null);
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        try {
+
+            const data = await api.analyseCode(
+                code,
+                language
+            );
+
+            setResults(data);
+
+        } catch (err) {
+
+            setError(err.message);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+    };
+
+
+    return (
+        <div className="app">
+
+            <h1>AI-Assisted Code Review Helper</h1>
+
+
+            {/* Language selection */}
+
+            <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+            >
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="java">Java</option>
+            </select>
+
+
+            {/* Code input */}
+
+            <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Paste your code here..."
+            />
+
+
+            {/* Security warning */}
+
+            <p>
+                Do not submit confidential code, API keys,
+                passwords or personal information.
+            </p>
+
+
+            {/* Consent */}
+
+            <label>
+
+                <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                />
+
+                I confirm that this code does not contain
+                confidential or personal information.
+
+            </label>
+
+
+            {/* Analyse button */}
+
+            <button
+                disabled={!consent || loading || !code.trim()}
+                onClick={handleAnalyse}
+            >
+
+                {loading
+                    ? "Analysing..."
+                    : "Analyse Code"
+                }
+
+            </button>
+
+
+            {/* Error */}
+
+            {error && (
+
+                <div className="error">
+
+                    <h2>Error</h2>
+
+                    <p>{error}</p>
+
+                </div>
+
+            )}
+
+
+            {/* Results */}
+
+            {results && (
+
+                <div className="results">
+
+                    <h2>Review Results</h2>
+
+
+                    {/* Overall score */}
+
+                    {results.score && (
+
+                        <div className="score">
+
+                            <h3>
+                                Overall Score
+                            </h3>
+
+                            <p>
+                                {results.score.overall}/100
+                            </p>
+
+                        </div>
+
+                    )}
+
+
+                    {/* Score breakdown */}
+
+                    {results.score && (
+
+                        <div className="score-breakdown">
+
+                            <h3>
+                                Score Breakdown
+                            </h3>
+
+                            <p>
+                                Readability:
+                                {" "}
+                                {results.score.readability}/100
+                            </p>
+
+                            <p>
+                                Maintainability:
+                                {" "}
+                                {results.score.maintainability}/100
+                            </p>
+
+                            <p>
+                                Style:
+                                {" "}
+                                {results.score.style}/100
+                            </p>
+
+                            <p>
+                                Bugs:
+                                {" "}
+                                {results.score.bugs}/100
+                            </p>
+
+                        </div>
+
+                    )}
+
+
+                    {/* Static analysis */}
+
+                    <div className="static-results">
+
+                        <h3>
+                            Static Analysis
+                        </h3>
+
+                        <p>
+                            Tool:{" "}
+                            {results.static_analysis?.tool}
+                        </p>
+
+
+                        {results.static_analysis?.issues?.length > 0 ? (
+
+                            <ul>
+
+                                {results.static_analysis.issues.map(
+                                    (issue, index) => (
+
+                                        <li key={index}>
+
+                                            <strong>
+                                                {issue.type}
+                                            </strong>
+
+                                            {" - "}
+
+                                            {issue.message}
+
+                                            {issue.line && (
+
+                                                <span>
+                                                    {" "}
+                                                    (Line {issue.line})
+                                                </span>
+
+                                            )}
+
+                                        </li>
+
+                                    )
+                                )}
+
+                            </ul>
+
+                        ) : (
+
+                            <p>
+                                No static analysis issues found.
+                            </p>
+
+                        )}
+
+                    </div>
+
+
+                    {/* AI analysis */}
+
+                    <div className="ai-results">
+
+                        <h3>
+                            AI Analysis
+                        </h3>
+
+
+                        {results.ai_analysis?.error ? (
+
+                            <p className="error">
+                                AI analysis unavailable:
+                                {" "}
+                                {results.ai_analysis.error}
+                            </p>
+
+                        ) : results.ai_analysis?.issues?.length > 0 ? (
+
+                            <ul>
+
+                                {results.ai_analysis.issues.map(
+                                    (issue, index) => (
+
+                                        <li key={index}>
+
+                                            <strong>
+                                                {issue.severity?.toUpperCase()}
+                                            </strong>
+
+                                            {" - "}
+
+                                            <strong>
+                                                {issue.category}
+                                            </strong>
+
+                                            <p>
+                                                {issue.message}
+                                            </p>
+
+                                            <p>
+                                                <strong>
+                                                    Suggestion:
+                                                </strong>
+                                                {" "}
+                                                {issue.suggestion}
+                                            </p>
+
+                                            {issue.line && (
+
+                                                <p>
+                                                    Line: {issue.line}
+                                                </p>
+
+                                            )}
+
+                                        </li>
+
+                                    )
+                                )}
+
+                            </ul>
+
+                        ) : (
+
+                            <p>
+                                No AI issues found.
+                            </p>
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            )}
+
+        </div>
+    );
 }
 
-export default App
+export default App;
