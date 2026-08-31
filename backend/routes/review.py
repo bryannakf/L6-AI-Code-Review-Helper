@@ -1,3 +1,4 @@
+import time
 from flask import Blueprint, request, jsonify
 
 from utils.validation import validate_code
@@ -31,6 +32,10 @@ def review_code():
         return jsonify({
             "error": error
         }), 400
+    #3 start timer
+    import time
+
+    start_time = time.perf_counter()
 
     # 3. Run static analysis
     if language.lower() == "python":
@@ -61,11 +66,17 @@ def review_code():
         static_issues,
         ai_issues
     )
-
+    # stop timer
+    end_time = time.perf_counter()
+    analysis_time = round(
+        end_time - start_time,
+        2
+    )
     # 6. Return results
     return jsonify({
         "language": language,
         "static_analysis": static_results,
         "ai_analysis": ai_results,
-        "score": score
+        "score": score,
+        "analysis_time": analysis_time
     })
