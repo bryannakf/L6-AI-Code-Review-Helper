@@ -7,6 +7,7 @@ from services.pylint_service import analyse_python
 from services.eslint_service import analyse_javascript
 from services.ai_service import analyse_code
 from services.scoring_service import calculate_score
+from utils.security import detect_secrets
 
 
 review_bp = Blueprint("review", __name__)
@@ -35,6 +36,18 @@ def review_code():
     if not valid:
         return jsonify({
             "error": error
+        }), 400
+        
+    # 3. Check for potential secrets
+    secret_findings = detect_secrets(code)
+
+    if secret_findings:
+        return jsonify({
+            "error": "Potential secret or credential detected. Please remove sensitive information before submitting the code.",
+            "security": {
+                "secrets_detected": True,
+                "issues": secret_findings
+            }
         }), 400
 
     # 3. Run static analysis

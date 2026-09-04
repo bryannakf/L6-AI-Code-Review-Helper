@@ -30,10 +30,13 @@ function App() {
     setResults(null);
     setError("");
   };
+  
+  const [securityError, setSecurityError] = useState("");
 
   const handleAnalyse = async () => {
     setLoading(true);
     setError("");
+    setSecurityError("");
     setResults(null);
 
     try {
@@ -52,7 +55,11 @@ function App() {
 
       setResults(data);
     } catch (err) {
-      setError(err.message);
+      if (err.response && err.response.data && err.response.data.security) {
+        setSecurityError(err.response.data.error);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -63,26 +70,26 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <div className="brand">
-            <div className="brand-icon">AI</div>
             <div>
-              <h1>Code Review Helper</h1>
-              <p>Fast quality checks with clear, practical feedback</p>
+              <h1>AI Code Review Helper</h1>
             </div>
           </div>
 
           <div className="status">
-            <span className="status-dot" />
-            <span>Ready to analyse</span>
+            {securityError && (
+              <div className="security-error">
+                {securityError}
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       <main className="main-content">
         <section className="intro">
-          <p className="eyebrow">SECURE REVIEW FLOW</p>
-          <h2>Review code quality before you ship</h2>
+          <h2>Submit a code snippet</h2>
           <p>
-            Submit a snippet, run static and AI checks, and get a clear quality
+          Static and AI checks with a clear quality
             score with actionable suggestions.
           </p>
         </section>
@@ -162,32 +169,6 @@ function App() {
                 <p>{error}</p>
               </div>
             )}
-          </div>
-        </section>
-
-        <section className="how-it-works">
-          <h2>How it works</h2>
-          <div className="steps">
-            <div className="step">
-              <p className="step-number">STEP 1</p>
-              <h3>Paste snippet</h3>
-              <p>Add the code you want reviewed.</p>
-            </div>
-            <div className="step">
-              <p className="step-number">STEP 2</p>
-              <h3>Confirm safety</h3>
-              <p>Verify there is no sensitive information.</p>
-            </div>
-            <div className="step">
-              <p className="step-number">STEP 3</p>
-              <h3>Run analysis</h3>
-              <p>Static checks and AI feedback are generated.</p>
-            </div>
-            <div className="step">
-              <p className="step-number">STEP 4</p>
-              <h3>Take action</h3>
-              <p>Use prioritized suggestions to improve quality.</p>
-            </div>
           </div>
         </section>
 
