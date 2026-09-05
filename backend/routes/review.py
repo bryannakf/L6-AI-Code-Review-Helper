@@ -2,12 +2,20 @@ import time
 
 from flask import Blueprint, request, jsonify
 
-from utils.validation import validate_code
-from services.pylint_service import analyse_python
-from services.eslint_service import analyse_javascript
-from services.ai_service import analyse_code
-from services.scoring_service import calculate_score
-from utils.security import detect_secrets
+try:
+    from backend.utils.validation import validate_code
+    from backend.services.pylint_service import analyse_python
+    from backend.services.eslint_service import analyse_javascript
+    from backend.services.ai_service import analyse_code
+    from backend.services.scoring_service import calculate_score
+    from backend.utils.security import detect_secrets
+except ModuleNotFoundError:
+    from utils.validation import validate_code
+    from services.pylint_service import analyse_python
+    from services.eslint_service import analyse_javascript
+    from services.ai_service import analyse_code
+    from services.scoring_service import calculate_score
+    from utils.security import detect_secrets
 
 
 review_bp = Blueprint("review", __name__)

@@ -3,7 +3,10 @@ from pathlib import Path
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 
-from routes.review import review_bp
+try:
+    from backend.routes.review import review_bp
+except ModuleNotFoundError:
+    from routes.review import review_bp
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
