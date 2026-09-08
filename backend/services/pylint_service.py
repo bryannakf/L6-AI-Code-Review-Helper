@@ -1,6 +1,7 @@
-import subprocess
-import tempfile
 import os
+import subprocess
+import sys
+import tempfile
 
 
 def analyse_python(code):
@@ -19,12 +20,15 @@ def analyse_python(code):
 
         result = subprocess.run(
             [
+                sys.executable,
+                "-m",
                 "pylint",
                 temp_file,
                 "--output-format=json"
             ],
             capture_output=True,
-            text=True
+            text=True,
+            check=False
         )
 
         return {
