@@ -3,8 +3,7 @@ from pathlib import Path
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 
-from routes.review import review_bp
-
+from backend.routes.review import review_bp
 
 # Get the main project folder
 BASE_DIR = Path(__file__).resolve().parent.parent
