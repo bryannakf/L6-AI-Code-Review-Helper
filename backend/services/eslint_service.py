@@ -10,9 +10,25 @@ def analyse_javascript(code):
     temp_file = None
 
     try:
-        # Find the frontend directory
+        # Find the project root
         project_root = Path(__file__).resolve().parents[2]
         frontend_dir = project_root / "frontend"
+
+        # Choose the correct ESLint executable for the operating system
+        if os.name == "nt":
+            eslint_path = (
+                frontend_dir
+                / "node_modules"
+                / ".bin"
+                / "eslint.cmd"
+            )
+        else:
+            eslint_path = (
+                frontend_dir
+                / "node_modules"
+                / ".bin"
+                / "eslint"
+            )
 
         # Create temporary JavaScript file inside frontend
         with tempfile.NamedTemporaryFile(
@@ -26,13 +42,6 @@ def analyse_javascript(code):
             file.write(code)
             temp_file = file.name
 
-        eslint_path = (
-            frontend_dir
-            / "node_modules"
-            / ".bin"
-            / "eslint.cmd"
-        )
-
         result = subprocess.run(
             [
                 str(eslint_path),
@@ -43,8 +52,8 @@ def analyse_javascript(code):
             text=True
         )
 
-        # ESLint can return a non-zero exit code when it finds issues.
-        # That is expected and should not be treated as a Python error.
+        # ESLint returns a non-zero exit code when it finds issues.
+        # This is expected and should not be treated as a Python error.
         output = result.stdout or result.stderr
 
         return {
