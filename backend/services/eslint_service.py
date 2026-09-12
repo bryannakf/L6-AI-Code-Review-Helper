@@ -42,6 +42,13 @@ def analyse_javascript(code):
             file.write(code)
             temp_file = file.name
 
+        if not eslint_path.exists():
+            return {
+                "tool": "eslint",
+                "issues": [],
+                "error": "eslint is not installed"
+            }
+
         result = subprocess.run(
             [
                 str(eslint_path),
