@@ -5,9 +5,10 @@ from flask import Blueprint, request, jsonify
 from backend.utils.validation import validate_code
 from backend.services.pylint_service import analyse_python
 from backend.services.eslint_service import analyse_javascript
+from backend.services.csharp_service import analyse_csharp
 from backend.services.ai_service import analyse_code
 from backend.services.scoring_service import calculate_score
-from backend.utils.security import detect_secrets 
+from backend.utils.security import detect_secrets
 
 
 review_bp = Blueprint("review", __name__)
@@ -37,7 +38,7 @@ def review_code():
         return jsonify({
             "error": error
         }), 400
-        
+
     # 3. Check for potential secrets
     secret_findings = detect_secrets(code)
 
@@ -50,7 +51,7 @@ def review_code():
             }
         }), 400
 
-    # 3. Run static analysis
+    # 4. Run static analysis
     static_start = time.perf_counter()
 
     if language.lower() == "python":
@@ -60,6 +61,10 @@ def review_code():
     elif language.lower() in ["javascript", "js"]:
 
         static_results = analyse_javascript(code)
+
+    elif language.lower() == "csharp":
+
+        static_results = analyse_csharp(code)
 
     else:
 
@@ -74,7 +79,19 @@ def review_code():
         2
     )
 
-    # 4. Run AI analysis
+    # Normalise static-analysis results
+    # C# uses "findings", while Python/JavaScript use "issues".
+    static_issues = static_results.get(
+        "findings",
+        static_results.get("issues", [])
+    )
+
+    static_analysis = {
+        "tool": static_results.get("tool", "Unknown"),
+        "issues": static_issues
+    }
+
+    # 5. Run AI analysis
     ai_start = time.perf_counter()
 
     ai_results = analyse_code(code, language)
@@ -89,13 +106,13 @@ def review_code():
     # Check whether AI analysis succeeded
     ai_available = "error" not in ai_results
 
-    # 5. Calculate score
+    # 6. Calculate score
     score_start = time.perf_counter()
 
     if ai_available:
 
         score = calculate_score(
-            static_results.get("issues", []),
+            static_issues,
             ai_results.get("issues", [])
         )
 
@@ -104,7 +121,7 @@ def review_code():
         # Continue using static-analysis results
         # if the AI service is unavailable.
         score = calculate_score(
-            static_results.get("issues", []),
+            static_issues,
             []
         )
 
@@ -123,11 +140,11 @@ def review_code():
         2
     )
 
-    # 6. Return results
+    # 7. Return results
     return jsonify({
         "language": language,
 
-        "static_analysis": static_results,
+        "static_analysis": static_analysis,
 
         "ai_analysis": ai_results,
 
