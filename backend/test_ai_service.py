@@ -1,54 +1,56 @@
-import time
-from services.ai_service import analyse_code
+import json
+from types import SimpleNamespace
 
-# Test Python
+import services.ai_service as ai_service
 
-python_code = """
-def divide(a, b):
-    password = "secret123"
-    print(password)
-    result = a / b
-    return result
-"""
 
-python_start = time.perf_counter()
+class FakeCompletions:
+    def __init__(self, payload):
+        self.payload = payload
 
-python_result = analyse_code(
-    python_code,
-    "python"
-)
+    def create(self, **kwargs):
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content=self.payload)
+                )
+            ]
+        )
 
-python_end = time.perf_counter()
 
-python_time = python_end - python_start
+def test_analyse_code_returns_openai_issues(monkeypatch):
+    payload = json.dumps({
+        "issues": [{
+            "severity": "high",
+            "category": "bugs",
+            "message": "Potential divide-by-zero risk",
+            "suggestion": "Guard against zero values",
+            "line": 3,
+        }]
+    })
 
-print("PYTHON RESULT:")
-print(python_result)
+    monkeypatch.setattr(
+        ai_service,
+        "client",
+        SimpleNamespace(chat=SimpleNamespace(completions=FakeCompletions(payload))),
+    )
 
-print(f"Python AI analysis time: {python_time:.2f} seconds")
+    result = ai_service.analyse_code("def divide(a, b):\n    return a / b\n", "python")
 
-# Test JavaScript
+    assert result["tool"] == "openai"
+    assert result["issues"][0]["severity"] == "high"
+    assert result["issues"][0]["line"] == 3
 
-javascript_code = """
-function login(username, password) {
-    const query = "SELECT * FROM users WHERE username = '" + username + "'";
-    console.log(password);
-    return query;
-}
-"""
 
-javascript_start = time.perf_counter()
+def test_analyse_code_handles_invalid_json(monkeypatch):
+    monkeypatch.setattr(
+        ai_service,
+        "client",
+        SimpleNamespace(chat=SimpleNamespace(completions=FakeCompletions("not-json"))),
+    )
 
-javascript_result = analyse_code(
-    javascript_code,
-    "javascript"
-)
+    result = ai_service.analyse_code("print('hello')\n", "python")
 
-javascript_end = time.perf_counter()
-
-javascript_time = javascript_end - javascript_start
-
-print("\nJAVASCRIPT RESULT:")
-print(javascript_result)
-
-print(f"JavaScript AI analysis time: {javascript_time:.2f} seconds")
+    assert result["tool"] == "openai"
+    assert result["issues"] == []
+    assert result["error"] == "AI returned invalid JSON"

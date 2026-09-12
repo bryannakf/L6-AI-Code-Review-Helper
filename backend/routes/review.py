@@ -20,9 +20,9 @@ def review_code():
     start_time = time.perf_counter()
 
     # 1. Get request
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
-    if not data:
+    if not isinstance(data, dict):
         return jsonify({
             "error": "No request data provided"
         }), 400
