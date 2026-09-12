@@ -9,10 +9,13 @@ from openai import OpenAI
 load_dotenv()
 
 
-# Create OpenAI client
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+# Create OpenAI client only when credentials are available.
+# In CI and local development without a configured API key, the backend should
+# fail gracefully instead of crashing at import time.
+client = None
+api_key = os.getenv("OPENAI_API_KEY")
+if api_key:
+    client = OpenAI(api_key=api_key)
 
 
 def analyse_code(code, language):
@@ -72,6 +75,13 @@ def analyse_code(code, language):
     ```{language}
     {code}
     """
+    if client is None:
+        return {
+            "tool": "openai",
+            "issues": [],
+            "error": "OPENAI_API_KEY is not configured"
+        }
+
     try:
 
         response = client.chat.completions.create(

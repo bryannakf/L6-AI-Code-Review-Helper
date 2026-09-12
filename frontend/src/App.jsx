@@ -1,6 +1,6 @@
 import { useState } from "react";
 import * as api from "./services/api";
-import AppContent from "./AppContent";
+import AppContent from "./AppContent.jsx";
 import "./App.css";
 
 function App() {
