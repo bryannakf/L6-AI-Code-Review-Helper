@@ -12,14 +12,12 @@ RUN apt-get update \
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY backend/requirements.txt /app/backend/requirements.txt
-COPY frontend/package*.json /app/frontend/
+COPY backend /app/backend
+COPY frontend /app/frontend
 
 RUN python -m pip install --no-cache-dir --upgrade pip \
     && python -m pip install --no-cache-dir -r /app/backend/requirements.txt \
     && cd /app/frontend && npm install
-
-COPY . .
 
 WORKDIR /app/backend
 EXPOSE 5000
