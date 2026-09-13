@@ -115,11 +115,22 @@ def analyse_csharp(code):
                 [
                     "dotnet",
                     "build",
-                    temp_dir
+                    temp_dir,
+                    "-nologo",
+                    "-v:q"
                 ],
                 capture_output=True,
-                text=True
+                text=True,
+                timeout=30,
+                check=False
             )
+        except subprocess.TimeoutExpired as exc:
+            return {
+                "tool": "Roslyn",
+                "findings": [],
+                "success": False,
+                "error": "C# analysis timed out after 30 seconds. The .NET build was too slow or resource-constrained."
+            }
         except OSError as exc:
             return {
                 "tool": "Roslyn",
