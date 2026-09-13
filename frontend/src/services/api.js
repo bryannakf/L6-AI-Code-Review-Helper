@@ -1,4 +1,9 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "/api"
+    : `${window.location.origin}/api`);
 
 export async function analyseCode(code, language) {
   const response = await fetch(`${API_URL.replace(/\/$/, "")}/review`, {
