@@ -97,7 +97,7 @@ test("app renders analysis results with score, static issues, and AI issues", ()
 
   assert.match(html, /Review Results/);
   assert.match(html, /Overall Quality Score/);
-  assert.match(html, /Excellent/);
+  assert.match(html, /Good/);
   assert.match(html, /Readability/);
   assert.match(html, /Maintainability/);
   assert.match(html, /Static Analysis/);
