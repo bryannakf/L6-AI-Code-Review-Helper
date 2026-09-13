@@ -12,6 +12,7 @@ RUN apt-get update \
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+COPY requirements.txt /app/requirements.txt
 COPY backend /app/backend
 COPY frontend /app/frontend
 
