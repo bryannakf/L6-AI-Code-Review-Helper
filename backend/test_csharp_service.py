@@ -1,17 +1,14 @@
-from services.csharp_service import analyse_csharp
+import importlib
 
-code = """
-using System;
 
-class Program
-{
-    static void Main()
-    {
-        Console.WriteLine("Hello");
-    
-}
-"""
+def test_analyse_csharp_reports_missing_dotnet_cleanly(monkeypatch):
+    csharp_service = importlib.import_module("services.csharp_service")
 
-result = analyse_csharp(code)
+    monkeypatch.setattr(csharp_service.shutil, "which", lambda _: None)
 
-print(result)
+    result = csharp_service.analyse_csharp("class Program {}")
+
+    assert result["tool"] == "Roslyn"
+    assert result["findings"] == []
+    assert result["success"] is False
+    assert ".NET SDK" in result["error"]

@@ -1,7 +1,8 @@
 import os
+import re
+import shutil
 import subprocess
 import tempfile
-import re
 
 
 def parse_diagnostics(output):
@@ -57,28 +58,42 @@ def parse_diagnostics(output):
 
 
 def analyse_csharp(code):
+    if shutil.which("dotnet") is None:
+        return {
+            "tool": "Roslyn",
+            "findings": [],
+            "success": False,
+            "error": "The .NET SDK is not installed or not available on PATH. C# analysis cannot run in this environment."
+        }
 
     with tempfile.TemporaryDirectory() as temp_dir:
-
-        # Create temporary C# project
-        create_project = subprocess.run(
-            [
-                "dotnet",
-                "new",
-                "console",
-                "--output",
-                temp_dir
-            ],
-            capture_output=True,
-            text=True
-        )
+        try:
+            # Create temporary C# project
+            create_project = subprocess.run(
+                [
+                    "dotnet",
+                    "new",
+                    "console",
+                    "--output",
+                    temp_dir
+                ],
+                capture_output=True,
+                text=True
+            )
+        except OSError as exc:
+            return {
+                "tool": "Roslyn",
+                "findings": [],
+                "success": False,
+                "error": f"Failed to start dotnet: {exc}"
+            }
 
         if create_project.returncode != 0:
             return {
                 "tool": "Roslyn",
                 "findings": [],
                 "success": False,
-                "error": create_project.stderr
+                "error": create_project.stderr or create_project.stdout or "Failed to initialise the C# project."
             }
 
         # Replace the generated Program.cs
@@ -87,17 +102,25 @@ def analyse_csharp(code):
         with open(program_path, "w", encoding="utf-8") as file:
             file.write(code)
 
-        # Run Roslyn/.NET analyzers
-        result = subprocess.run(
-            [
-                "dotnet",
-                "build",
-                temp_dir,
-                "--no-restore"
-            ],
-            capture_output=True,
-            text=True
-        )
+        try:
+            # Run Roslyn/.NET analyzers
+            result = subprocess.run(
+                [
+                    "dotnet",
+                    "build",
+                    temp_dir,
+                    "--no-restore"
+                ],
+                capture_output=True,
+                text=True
+            )
+        except OSError as exc:
+            return {
+                "tool": "Roslyn",
+                "findings": [],
+                "success": False,
+                "error": f"Failed to run dotnet build: {exc}"
+            }
 
         output = result.stdout + result.stderr
 
