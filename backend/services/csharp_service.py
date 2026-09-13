@@ -124,6 +124,10 @@ def analyse_csharp(code):
 
         output = result.stdout + result.stderr
 
+        #debug
+        print("C# DOTNET OUTPUT:")
+        print(output)
+
         findings = parse_diagnostics(output)
 
         return {

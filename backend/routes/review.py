@@ -30,7 +30,8 @@ def review_code():
 
     code = data.get("code")
     language = data.get("language")
-
+    #debug
+    print("DEBUG LANGUAGE:", repr(language))
     # 2. Validate request
     valid, error = validate_code(code, language)
 
