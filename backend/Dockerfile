@@ -18,7 +18,7 @@ COPY frontend /app/frontend
 
 RUN python -m pip install --no-cache-dir --upgrade pip \
     && python -m pip install --no-cache-dir -r /app/backend/requirements.txt \
-    && cd /app/frontend && npm install
+    && cd /app/frontend && npm install && npm run build
 
 WORKDIR /app/backend
 EXPOSE 5000
