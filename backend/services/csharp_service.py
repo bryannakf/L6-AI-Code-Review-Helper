@@ -68,12 +68,13 @@ def analyse_csharp(code):
 
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            # Create temporary C# project
             create_project = subprocess.run(
                 [
                     "dotnet",
                     "new",
                     "console",
+                    "--framework",
+                    "net8.0",
                     "--output",
                     temp_dir
                 ],
@@ -96,20 +97,25 @@ def analyse_csharp(code):
                 "error": create_project.stderr or create_project.stdout or "Failed to initialise the C# project."
             }
 
-        # Replace the generated Program.cs
         program_path = os.path.join(temp_dir, "Program.cs")
 
-        with open(program_path, "w", encoding="utf-8") as file:
-            file.write(code)
+        try:
+            with open(program_path, "w", encoding="utf-8") as file:
+                file.write(code)
+        except Exception as exc:
+            return {
+                "tool": "Roslyn",
+                "findings": [],
+                "success": False,
+                "error": f"Failed to write C# program: {exc}"
+            }
 
         try:
-            # Run Roslyn/.NET analyzers
             result = subprocess.run(
                 [
                     "dotnet",
                     "build",
-                    temp_dir,
-                    "--no-restore"
+                    temp_dir
                 ],
                 capture_output=True,
                 text=True
@@ -122,11 +128,7 @@ def analyse_csharp(code):
                 "error": f"Failed to run dotnet build: {exc}"
             }
 
-        output = result.stdout + result.stderr
-
-        #debug
-        print("C# DOTNET OUTPUT:")
-        print(output)
+        output = (result.stdout or "") + (result.stderr or "")
 
         findings = parse_diagnostics(output)
 
