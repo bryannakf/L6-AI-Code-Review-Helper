@@ -1,3 +1,4 @@
+import React from "react";
 import { getScoreLabel, getSeverityClass } from "./utils/review";
 
 function AppContent({
