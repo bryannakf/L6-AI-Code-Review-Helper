@@ -76,7 +76,8 @@ def review_code():
 
         static_analysis = {
             "tool": static_results.get("tool", "Unknown"),
-            "issues": static_issues
+            "issues": static_issues,
+            "error": static_results.get("error")
         }
 
         # 5. Run AI analysis
