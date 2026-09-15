@@ -797,3 +797,31 @@ footer p {
     padding: 20px;
   }
 }
+
+.security-confirmation {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  background: #fff7ed;
+}
+
+.security-confirmation-content {
+  flex: 1;
+}
+
+.security-confirmation-content h3 {
+  margin-top: 0;
+}
+
+.security-confirmation-content p {
+  margin-bottom: 12px;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}

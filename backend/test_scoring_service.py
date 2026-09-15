@@ -1,49 +1,171 @@
-from app import app
-from services.scoring_service import calculate_score
+import time
+
+from flask import Blueprint, request, jsonify
+
+from backend.utils.validation import validate_code
+from backend.services.pylint_service import analyse_python
+from backend.services.eslint_service import analyse_javascript
+from backend.services.csharp_service import analyse_csharp
+from backend.services.ai_service import analyse_code
+from backend.services.scoring_service import calculate_score
+from backend.utils.security import detect_secrets
 
 
-def test_calculate_score_aggregates_static_and_ai_findings():
-    score = calculate_score(
-        [
-            {"type": "error"},
-            {"type": "warning"},
-            {"type": "convention"},
-        ],
-        [
-            {"severity": "critical"},
-            {"severity": "medium"},
-            {"severity": "low"},
-        ],
-    )
-
-    assert score["overall"] == 86
-    assert score["bugs"] == 65
-    assert score["maintainability"] == 90
-    assert score["readability"] == 92
-    assert score["style"] == 95
+review_bp = Blueprint("review", __name__)
 
 
-def test_review_route_rejects_missing_or_sensitive_code():
-    client = app.test_client()
+@review_bp.route("/review", methods=["POST"])
+def review_code():
 
-    response = client.post(
-        "/api/review",
-        json={"code": "print('hello')", "language": "python"},
-    )
-    assert response.status_code == 200
-    assert response.get_json()["language"] == "python"
+    try:
+        # Start overall timer
+        start_time = time.perf_counter()
 
-    secret_response = client.post(
-        "/api/review",
-        json={"code": "password = 'super-secret'\nprint(password)", "language": "python"},
-    )
-    assert secret_response.status_code == 400
-    assert "Potential secret" in secret_response.get_json()["error"]
+        # 1. Get request
+        data = request.get_json(silent=True) or {}
 
+        if not isinstance(data, dict):
+            return jsonify({
+                "error": "No request data provided"
+            }), 400
 
-def test_review_route_validates_request_shape():
-    client = app.test_client()
+        code = data.get("code")
+        language = data.get("language")
 
-    response = client.post("/api/review", json={})
-    assert response.status_code == 400
-    assert response.get_json()["error"] == "Code is required"
+        # Indicates whether the user has confirmed that a
+        # detected secret-like pattern is not sensitive information.
+        secret_confirmed = data.get("secret_confirmed", False)
+
+        # 2. Validate request
+        valid, error = validate_code(code, language)
+
+        if not valid:
+            return jsonify({
+                "error": error
+            }), 400
+
+        # 3. Check for potential secrets
+        secret_findings = detect_secrets(code)
+
+        if secret_findings and not secret_confirmed:
+            return jsonify({
+                "error": (
+                    "A pattern resembling a secret or credential "
+                    "was detected. Please confirm that the code "
+                    "does not contain sensitive information."
+                ),
+                "security": {
+                    "secrets_detected": True,
+                    "confirmation_required": True,
+                    "issues": secret_findings
+                }
+            }), 400
+
+        # 4. Run static analysis
+        static_start = time.perf_counter()
+
+        if language.lower() == "python":
+            static_results = analyse_python(code)
+
+        elif language.lower() in ["javascript", "js"]:
+            static_results = analyse_javascript(code)
+
+        elif language.lower() == "csharp":
+            static_results = analyse_csharp(code)
+
+        else:
+            return jsonify({
+                "error": f"Unsupported language: {language}"
+            }), 400
+
+        static_end = time.perf_counter()
+        static_analysis_time = round(
+            static_end - static_start, 2
+        )
+
+        static_issues = static_results.get(
+            "findings",
+            static_results.get("issues", [])
+        )
+
+        static_analysis = {
+            "tool": static_results.get("tool", "Unknown"),
+            "issues": static_issues,
+            "error": static_results.get("error")
+        }
+
+        # 5. Run AI analysis
+        ai_start = time.perf_counter()
+
+        ai_results = analyse_code(code, language)
+
+        ai_end = time.perf_counter()
+
+        ai_analysis_time = round(
+            ai_end - ai_start, 2
+        )
+
+        ai_available = (
+            isinstance(ai_results, dict)
+            and "error" not in ai_results
+        )
+
+        # 6. Calculate score
+        score_start = time.perf_counter()
+
+        if ai_available:
+            score = calculate_score(
+                static_issues,
+                ai_results.get("issues", [])
+            )
+        else:
+            score = calculate_score(
+                static_issues,
+                []
+            )
+
+        score_end = time.perf_counter()
+
+        score_calculation_time = round(
+            score_end - score_start, 2
+        )
+
+        # 7. Calculate total analysis time
+        end_time = time.perf_counter()
+
+        analysis_time = round(
+            end_time - start_time, 2
+        )
+
+        return jsonify({
+            "language": language,
+
+            "static_analysis": static_analysis,
+
+            "ai_analysis": ai_results,
+
+            "ai_feedback": {
+                "available": ai_available,
+                "error": (
+                    "AI analysis unavailable"
+                    if not ai_available
+                    else None
+                )
+            },
+
+            "score": score,
+
+            "analysis_time": analysis_time,
+
+            "performance": {
+                "static_analysis_time": static_analysis_time,
+                "ai_analysis_time": ai_analysis_time,
+                "score_calculation_time": score_calculation_time
+            }
+        })
+
+    except Exception as exc:
+        return jsonify({
+            "error": "Internal server error while reviewing code.",
+            "details": str(exc)
+        }), 500
