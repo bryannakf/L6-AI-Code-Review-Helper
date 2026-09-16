@@ -82,7 +82,6 @@ test("app renders analysis results with score, static issues, and AI issues", ()
         issues: [{ type: "warning", message: "Unused variable", line: 2 }],
       },
       ai_analysis: {
-        summary: "Initial review complete",
         issues: [
           {
             severity: "medium",
@@ -98,7 +97,6 @@ test("app renders analysis results with score, static issues, and AI issues", ()
             category: "maintainability",
             issue: "Function is doing too much",
             action: "Extract the repeated logic into a helper.",
-            suggested_code: "def helper():\n    pass",
             reason: "Smaller functions are easier to test and reuse.",
           },
         ],
@@ -111,13 +109,18 @@ test("app renders analysis results with score, static issues, and AI issues", ()
   assert.match(html, /Good/);
   assert.match(html, /Readability/);
   assert.match(html, /Maintainability/);
+  assert.match(html, /Recommended Actions/);
   assert.match(html, /Static Analysis/);
   assert.match(html, /AI Analysis/);
-  assert.match(html, /Recommended Actions/);
+  assert.match(html, /<details/);
+  assert.match(html, /<summary/);
   assert.match(html, /Unused variable/);
   assert.match(html, /Refactor this function/);
   assert.match(html, /Function is doing too much/);
   assert.match(html, /Smaller functions are easier to test and reuse\./);
+  assert.ok(
+    html.indexOf("Recommended Actions") < html.indexOf("Static Analysis"),
+  );
 });
 
 test("app renders no-issues messages when results are empty", () => {
@@ -137,5 +140,4 @@ test("app renders no-issues messages when results are empty", () => {
 
   assert.match(html, /No static analysis issues found\./);
   assert.match(html, /No AI findings identified\./);
-  assert.match(html, /No remediation actions were suggested\./);
 });

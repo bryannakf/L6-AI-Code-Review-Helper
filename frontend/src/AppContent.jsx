@@ -267,125 +267,167 @@ function AppContent({
               </>
             )}
 
-            {results.ai_analysis?.summary && (
-              <div className="summary">
-                <h3>AI Summary</h3>
+            {results.ai_analysis?.actions?.length > 0 && (
+              <div className="actions-section">
+                <h3>Recommended Actions</h3>
 
-                <p>{results.ai_analysis.summary}</p>
+                <div className="actions-list">
+                  {results.ai_analysis.actions.map((action, index) => (
+                    <div className="issue" key={`action-${index}`}>
+                      <div className="issue-header">
+                        <span
+                          className={`severity ${getSeverityClass(
+                            action.severity || action.category,
+                          )}`}
+                        >
+                          {action.category || "action"}
+                        </span>
+
+                        {action.line && (
+                          <span className="line">Line {action.line}</span>
+                        )}
+                      </div>
+
+                      <p className="issue-message">{action.issue}</p>
+
+                      {action.action && <p>{action.action}</p>}
+
+                      {action.reason && <p>{action.reason}</p>}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            <div className="issue-section">
-              <h3>Static Analysis</h3>
+            <details className="issue-section issue-accordion">
+              <summary className="issue-accordion-summary">
+                <div>
+                  <p className="issue-accordion-label">STATIC ANALYSIS</p>
 
-              <p className="tool">
-                Tool: {results.static_analysis?.tool || "N/A"}
-              </p>
-
-              {results.static_analysis?.issues?.length > 0 ? (
-                results.static_analysis.issues.map((issue, index) => (
-                  <div className="issue" key={`static-${index}`}>
-                    <div className="issue-header">
-                      <span
-                        className={`severity ${getSeverityClass(
-                          issue.severity || issue.type,
-                        )}`}
-                      >
-                        {issue.severity || issue.type || "info"}
-                      </span>
-
-                      {issue.line && (
-                        <span className="line">Line {issue.line}</span>
-                      )}
-                    </div>
-
-                    <p className="issue-message">{issue.message}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="no-issues">No static analysis issues found.</p>
-              )}
-            </div>
-
-            <div className="issue-section">
-              <h3>AI Analysis</h3>
-
-              {results.ai_analysis?.error ? (
-                <div className="error-message">
-                  <strong>AI analysis unavailable</strong>
-
-                  <p>{results.ai_analysis.error}</p>
+                  <h3>Static Analysis</h3>
                 </div>
-              ) : results.ai_analysis?.issues?.length > 0 ? (
-                results.ai_analysis.issues.map((issue, index) => (
-                  <div className="issue" key={`ai-${index}`}>
-                    <div className="issue-header">
-                      <span
-                        className={`severity ${getSeverityClass(
-                          issue.severity,
-                        )}`}
-                      >
-                        {issue.severity || "info"}
-                      </span>
 
-                      <span className="tool">
-                        {issue.category || "General"}
-                      </span>
+                <div className="issue-accordion-meta">
+                  <span>
+                    {results.static_analysis?.issues?.length || 0} finding
+                    {(results.static_analysis?.issues?.length || 0) === 1
+                      ? ""
+                      : "s"}
+                  </span>
 
-                      {issue.line && (
-                        <span className="line">Line {issue.line}</span>
-                      )}
-                    </div>
+                  <span className="issue-accordion-caret" aria-hidden="true">
+                    ▾
+                  </span>
+                </div>
+              </summary>
 
-                    <p className="issue-message">{issue.message}</p>
-
-                    {issue.suggestion && <p>{issue.suggestion}</p>}
-                  </div>
-                ))
-              ) : (
-                <p className="no-issues">No AI findings identified.</p>
-              )}
-            </div>
-
-            <div className="issue-section">
-              <h3>Recommended Actions</h3>
-
-              {results.ai_analysis?.actions?.length > 0 ? (
-                results.ai_analysis.actions.map((action, index) => (
-                  <div className="issue" key={`action-${index}`}>
-                    <div className="issue-header">
-                      <span
-                        className={`severity ${getSeverityClass(
-                          action.severity || action.category,
-                        )}`}
-                      >
-                        {action.category || "action"}
-                      </span>
-
-                      {action.line && (
-                        <span className="line">Line {action.line}</span>
-                      )}
-                    </div>
-
-                    <p className="issue-message">{action.issue}</p>
-
-                    {action.action && <p>{action.action}</p>}
-
-                    {action.suggested_code && (
-                      <pre className="suggested-code">
-                        <code>{action.suggested_code}</code>
-                      </pre>
-                    )}
-
-                    {action.reason && <p>{action.reason}</p>}
-                  </div>
-                ))
-              ) : (
-                <p className="no-issues">
-                  No remediation actions were suggested.
+              <div className="issue-accordion-body">
+                <p className="tool">
+                  Tool: {results.static_analysis?.tool || "N/A"}
                 </p>
-              )}
-            </div>
+
+                {results.static_analysis?.issues?.length > 0 ? (
+                  results.static_analysis.issues.map((issue, index) => (
+                    <div className="issue" key={`static-${index}`}>
+                      <div className="issue-header">
+                        <span
+                          className={`severity ${getSeverityClass(
+                            issue.severity || issue.type,
+                          )}`}
+                        >
+                          {issue.severity || issue.type || "info"}
+                        </span>
+
+                        {issue.line && (
+                          <span className="line">Line {issue.line}</span>
+                        )}
+                      </div>
+
+                      <p className="issue-message">{issue.message}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-issues">No static analysis issues found.</p>
+                )}
+              </div>
+            </details>
+
+            <details className="issue-section issue-accordion">
+              <summary className="issue-accordion-summary">
+                <div>
+                  <p className="issue-accordion-label">AI ANALYSIS</p>
+
+                  <h3>AI Analysis</h3>
+                </div>
+
+                <div className="issue-accordion-meta">
+                  <span>
+                    {results.ai_analysis?.error
+                      ? "Unavailable"
+                      : `${
+                          (results.ai_analysis?.issues?.length || 0) +
+                          (results.ai_analysis?.actions?.length || 0)
+                        } finding${
+                          (results.ai_analysis?.issues?.length || 0) +
+                            (results.ai_analysis?.actions?.length || 0) ===
+                          1
+                            ? ""
+                            : "s"
+                        }`}
+                  </span>
+
+                  <span className="issue-accordion-caret" aria-hidden="true">
+                    ▾
+                  </span>
+                </div>
+              </summary>
+
+              <div className="issue-accordion-body">
+                {results.ai_analysis?.error ? (
+                  <div className="error-message">
+                    <strong>AI analysis unavailable</strong>
+
+                    <p>{results.ai_analysis.error}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="issue-section-inner">
+                      <h4>AI Findings</h4>
+
+                      {results.ai_analysis?.issues?.length > 0 ? (
+                        results.ai_analysis.issues.map((issue, index) => (
+                          <div className="issue" key={`ai-${index}`}>
+                            <div className="issue-header">
+                              <span
+                                className={`severity ${getSeverityClass(
+                                  issue.severity,
+                                )}`}
+                              >
+                                {issue.severity || "info"}
+                              </span>
+
+                              <span className="tool">
+                                {issue.category || "General"}
+                              </span>
+
+                              {issue.line && (
+                                <span className="line">Line {issue.line}</span>
+                              )}
+                            </div>
+
+                            <p className="issue-message">{issue.message}</p>
+
+                            {issue.suggestion && <p>{issue.suggestion}</p>}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="no-issues">No AI findings identified.</p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </details>
 
             <div className="ai-disclaimer">
               AI suggestions are advisory and should be reviewed with project

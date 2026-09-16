@@ -624,6 +624,23 @@
 }
 
 /* =========================
+   ACTIONS
+========================= */
+
+.actions-section {
+  margin-top: 24px;
+}
+
+.actions-section h3 {
+  margin: 0 0 15px;
+}
+
+.actions-list {
+  display: grid;
+  gap: 12px;
+}
+
+/* =========================
    ISSUES
 ========================= */
 
@@ -631,8 +648,88 @@
   margin-top: 30px;
 }
 
-.issue-section h3 {
-  margin-bottom: 15px;
+.issue-accordion {
+  overflow: hidden;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: white;
+}
+
+.issue-accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 18px 20px;
+
+  list-style: none;
+  cursor: pointer;
+
+  background: #f9fafb;
+}
+
+.issue-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.issue-accordion[open] .issue-accordion-summary {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.issue-accordion-label {
+  margin: 0 0 6px;
+
+  color: #16a34a;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+.issue-accordion-summary h3 {
+  margin: 0;
+
+  font-size: 20px;
+}
+
+.issue-accordion-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.issue-accordion-caret {
+  display: inline-flex;
+
+  transition: transform 0.2s ease;
+}
+
+.issue-accordion[open] .issue-accordion-caret {
+  transform: rotate(180deg);
+}
+
+.issue-accordion-body {
+  padding: 20px;
+}
+
+.issue-section-inner + .issue-section-inner {
+  margin-top: 24px;
+}
+
+.issue-section-inner h4 {
+  margin: 0 0 15px;
+
+  font-size: 15px;
 }
 
 .issue {

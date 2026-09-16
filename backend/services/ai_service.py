@@ -77,7 +77,6 @@ def analyse_code(code, language, static_issues=None):
     Return ONLY valid JSON using this structure:
 
     {{
-        "summary": "Brief overall assessment",
         "issues": [
             {{
                 "severity": "high",
@@ -92,7 +91,6 @@ def analyse_code(code, language, static_issues=None):
     If there are no issues, return:
 
     {{
-        "summary": "No significant issues were found.",
         "issues": []
     }}
 
@@ -135,7 +133,13 @@ def analyse_code(code, language, static_issues=None):
     Return ONLY valid JSON using this structure:
 
     {{
-        "summary": "Brief overall assessment",
+        "recommendations": [
+            {{
+                "category": "readability",
+                "recommendation": "High-level improvement suggestion",
+                "reason": "Why this recommendation matters"
+            }}
+        ],
         "actions": [
             {{
                 "line": 1,
@@ -151,7 +155,7 @@ def analyse_code(code, language, static_issues=None):
     If there are no actionable issues, return:
 
     {{
-        "summary": "No actionable remediation was identified.",
+        "recommendations": [],
         "actions": []
     }}
     """
@@ -159,8 +163,8 @@ def analyse_code(code, language, static_issues=None):
     if client is None:
         return {
             "tool": "openai",
-            "summary": "",
             "issues": [],
+            "recommendations": [],
             "actions": [],
             "error": "OPENAI_API_KEY is not configured"
         }
@@ -172,14 +176,13 @@ def analyse_code(code, language, static_issues=None):
         if initial_result is None:
             return {
                 "tool": "openai",
-                "summary": "",
                 "issues": [],
+                "recommendations": [],
                 "actions": [],
                 "error": "AI returned invalid JSON"
             }
 
         initial_issues = initial_result.get("issues", [])
-        initial_summary = initial_result.get("summary", "")
 
         remediation_response_text = _call_openai(
             remediation_prompt.replace(
@@ -190,19 +193,19 @@ def analyse_code(code, language, static_issues=None):
         remediation_result = _load_json_response(remediation_response_text)
 
         actions = []
+        recommendations = []
         remediation_error = None
 
         if remediation_result is None:
             remediation_error = "AI returned invalid JSON for remediation guidance"
         else:
+            recommendations = remediation_result.get("recommendations", [])
             actions = remediation_result.get("actions", [])
-
-        summary = remediation_result.get("summary", initial_summary) if remediation_result else initial_summary
 
         return {
             "tool": "openai",
-            "summary": summary,
             "issues": initial_issues,
+            "recommendations": recommendations,
             "actions": actions,
             **(
                 {"remediation_error": remediation_error}
@@ -215,8 +218,8 @@ def analyse_code(code, language, static_issues=None):
 
         return {
             "tool": "openai",
-            "summary": "",
             "issues": [],
+            "recommendations": [],
             "actions": [],
             "error": str(error)
         }

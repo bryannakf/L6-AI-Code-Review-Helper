@@ -29,11 +29,14 @@ def test_analyse_code_returns_openai_issues(monkeypatch):
             "message": "Potential divide-by-zero risk",
             "suggestion": "Guard against zero values",
             "line": 3,
-        }],
-        "summary": "Initial findings"
+        }]
     })
     remediation_payload = json.dumps({
-        "summary": "Add a zero guard before dividing.",
+        "recommendations": [{
+            "category": "maintainability",
+            "recommendation": "Add guard clauses before division.",
+            "reason": "This makes the control flow clearer."
+        }],
         "actions": [{
             "line": 3,
             "category": "bugs",
@@ -61,7 +64,7 @@ def test_analyse_code_returns_openai_issues(monkeypatch):
     assert result["tool"] == "openai"
     assert result["issues"][0]["severity"] == "high"
     assert result["issues"][0]["line"] == 3
-    assert result["summary"] == "Add a zero guard before dividing."
+    assert result["recommendations"][0]["category"] == "maintainability"
     assert result["actions"][0]["line"] == 3
     assert "STATIC ANALYSIS FINDINGS" in fake_completions.calls[1]["messages"][0]["content"]
 
@@ -77,4 +80,5 @@ def test_analyse_code_handles_invalid_json(monkeypatch):
 
     assert result["tool"] == "openai"
     assert result["issues"] == []
+    assert result["recommendations"] == []
     assert result["error"] == "AI returned invalid JSON"
