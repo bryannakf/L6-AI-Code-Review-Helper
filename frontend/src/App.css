@@ -492,19 +492,19 @@
   display: flex;
   align-items: center;
 
-  gap: 30px;
+  gap: 20px;
 
-  padding: 25px;
+  padding: 18px;
 
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 9px;
 
   background: #f9fafb;
 }
 
 .score-circle {
-  width: 145px;
-  height: 145px;
+  width: 112px;
+  height: 112px;
 
   flex-shrink: 0;
 
@@ -513,27 +513,31 @@
   justify-content: center;
   flex-direction: column;
 
-  border: 10px solid #2563eb;
+  border: 8px solid #2563eb;
 
   border-radius: 50%;
 }
 
 .score-number {
-  font-size: 42px;
+  font-size: 32px;
   font-weight: 800;
 }
 
 .score-total {
   color: #6b7280;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .score-information h2 {
   margin: 0 0 5px;
+
+  font-size: 19px;
 }
 
 .score-information p {
   color: #6b7280;
+
+  font-size: 14px;
 
   line-height: 1.5;
 }
@@ -553,13 +557,13 @@
 
   grid-template-columns: repeat(4, 1fr);
 
-  gap: 15px;
+  gap: 10px;
 
-  margin-top: 20px;
+  margin-top: 14px;
 }
 
 .score-metric {
-  padding: 18px;
+  padding: 14px;
 
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -576,13 +580,13 @@
 }
 
 .score-metric strong {
-  font-size: 25px;
+  font-size: 21px;
 }
 
 .progress-bar {
-  height: 5px;
+  height: 4px;
 
-  margin-top: 12px;
+  margin-top: 10px;
 
   overflow: hidden;
 
