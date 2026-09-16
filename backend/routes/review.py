@@ -100,7 +100,8 @@ def review_code():
 
         ai_results = analyse_code(
             code,
-            language
+            language,
+            static_issues
         )
 
         ai_end = time.perf_counter()

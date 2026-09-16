@@ -82,6 +82,7 @@ test("app renders analysis results with score, static issues, and AI issues", ()
         issues: [{ type: "warning", message: "Unused variable", line: 2 }],
       },
       ai_analysis: {
+        summary: "Initial review complete",
         issues: [
           {
             severity: "medium",
@@ -89,6 +90,16 @@ test("app renders analysis results with score, static issues, and AI issues", ()
             message: "Refactor this function",
             suggestion: "Extract helper",
             line: 1,
+          },
+        ],
+        actions: [
+          {
+            line: 1,
+            category: "maintainability",
+            issue: "Function is doing too much",
+            action: "Extract the repeated logic into a helper.",
+            suggested_code: "def helper():\n    pass",
+            reason: "Smaller functions are easier to test and reuse.",
           },
         ],
       },
@@ -102,15 +113,18 @@ test("app renders analysis results with score, static issues, and AI issues", ()
   assert.match(html, /Maintainability/);
   assert.match(html, /Static Analysis/);
   assert.match(html, /AI Analysis/);
+  assert.match(html, /Recommended Actions/);
   assert.match(html, /Unused variable/);
   assert.match(html, /Refactor this function/);
+  assert.match(html, /Function is doing too much/);
+  assert.match(html, /Smaller functions are easier to test and reuse\./);
 });
 
 test("app renders no-issues messages when results are empty", () => {
   const html = renderApp({
     results: {
       static_analysis: { tool: "pylint", issues: [] },
-      ai_analysis: { issues: [] },
+      ai_analysis: { issues: [], actions: [] },
       score: {
         overall: 95,
         readability: 95,
@@ -122,5 +136,6 @@ test("app renders no-issues messages when results are empty", () => {
   });
 
   assert.match(html, /No static analysis issues found\./);
-  assert.match(html, /No AI issues found\./);
+  assert.match(html, /No AI findings identified\./);
+  assert.match(html, /No remediation actions were suggested\./);
 });
