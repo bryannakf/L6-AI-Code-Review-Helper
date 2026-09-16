@@ -364,13 +364,8 @@ function AppContent({
                   <span>
                     {results.ai_analysis?.error
                       ? "Unavailable"
-                      : `${
-                          (results.ai_analysis?.issues?.length || 0) +
-                          (results.ai_analysis?.actions?.length || 0)
-                        } finding${
-                          (results.ai_analysis?.issues?.length || 0) +
-                            (results.ai_analysis?.actions?.length || 0) ===
-                          1
+                      : `${results.ai_analysis?.issues?.length || 0} finding${
+                          (results.ai_analysis?.issues?.length || 0) === 1
                             ? ""
                             : "s"
                         }`}
